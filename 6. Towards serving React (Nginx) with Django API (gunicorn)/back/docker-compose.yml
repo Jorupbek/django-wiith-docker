@@ -1,0 +1,46 @@
+version: '3.9'
+
+# https://webdevblog.ru/kak-ispolzovat-django-postgresql-i-docker/
+services:
+  redis:
+    image: redis:alpine
+    container_name: redis
+
+  db:
+    image: postgres
+    volumes:
+      - ./data/db:/var/lib/postgresql/data
+    restart: always
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    container_name: postgres_db
+    
+  app:
+    build: .
+    volumes:
+      - .:/django
+    ports:
+      - 8000:8000
+    image: app:django
+    container_name: django_container
+    command: gunicorn --bind 0.0.0.0:8000 prjct.wsgi --workers=4
+    depends_on:
+      - db
+
+  celery:
+    restart: always
+    build:
+      context: .
+    command: celery -A prjct worker -l DEBUG
+    volumes:
+      - .:/django
+    image: app:celery
+    container_name: celery
+    depends_on:
+      - db
+      - redis
+      - app

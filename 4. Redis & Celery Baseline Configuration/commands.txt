@@ -1,0 +1,7 @@
+docker-compose build
+docker-compose up
+docker-compose exec app (or services name) python manage.py migrate
+
+
+docker images -aq | xargs docker rmi # Удалить все образы
+docker ps -aq | xargs docker rm # Удалить все контейнеры
